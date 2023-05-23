@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Il2CppDumper": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Star Trek Fleet Command\\default\\game\\GameAssembly.dll\" \"C:\\Star Trek Fleet Command\\default\\game\\prime_Data\\il2cpp_data\\Metadata\\global-metadata.dat\"",
+      "workingDirectory": "C:\\Star Trek Fleet Command\\default\\dump"
+    }
+  }
+}

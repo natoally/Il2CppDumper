@@ -13,7 +13,7 @@ namespace Il2CppDumper
         [STAThread]
         static void Main(string[] args)
         {
-            config = JsonSerializer.Deserialize<Config>(File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + @"config.json"));
+            config = JsonSerializer.Deserialize<Config>(File.ReadAllText(Path.Join(Directory.GetCurrentDirectory(), @"config.json")));
             string il2cppPath = null;
             string metadataPath = null;
             string outputDir = null;
@@ -53,7 +53,7 @@ namespace Il2CppDumper
                     }
                 }
             }
-            outputDir ??= AppDomain.CurrentDomain.BaseDirectory;
+            outputDir ??= Directory.GetCurrentDirectory() + "\\";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 if (il2cppPath == null)
