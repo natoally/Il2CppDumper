@@ -1008,6 +1008,11 @@ namespace Il2CppDumper
                     var fieldInfo = structInfoWithStructName[field.FieldTypeName];
                     pre.Append(RecursionStructInfo(fieldInfo));
                 }
+                if (field.FieldName.Equals("_import") ||
+                    field.FieldName.Equals("_export") ||
+                    field.FieldName.Equals("_near") ||
+                    field.FieldName.Equals("_far"))
+                    field.FieldName += "_FIX";
                 if (field.IsCustomType)
                 {
                     sb.Append($"\tstruct {field.FieldTypeName} {field.FieldName};\n");
