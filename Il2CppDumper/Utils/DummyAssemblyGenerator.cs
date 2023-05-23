@@ -30,6 +30,11 @@ namespace Il2CppDumper
             metadata = il2CppExecutor.metadata;
             il2Cpp = il2CppExecutor.il2Cpp;
 
+            bool addAddress = false;
+            bool addFieldOffset = false;
+            bool addMethodOffset = false;
+            bool addMetadataOffset = false;
+
             //Il2CppDummyDll
             var il2CppDummyDll = AssemblyDefinition.ReadAssembly(new MemoryStream(Resource1.Il2CppDummyDll));
             Assemblies.Add(il2CppDummyDll);
@@ -199,7 +204,8 @@ namespace Il2CppDumper
                                 var customAttribute = new CustomAttribute(typeDefinition.Module.ImportReference(metadataOffsetAttribute));
                                 var offset = new CustomAttributeNamedArgument("Offset", new CustomAttributeArgument(stringType, $"0x{value:X}"));
                                 customAttribute.Fields.Add(offset);
-                                fieldDefinition.CustomAttributes.Add(customAttribute);
+                                if (addMetadataOffset)
+                                    fieldDefinition.CustomAttributes.Add(customAttribute);
                             }
                         }
                         //fieldOffset
@@ -211,7 +217,8 @@ namespace Il2CppDumper
                                 var customAttribute = new CustomAttribute(typeDefinition.Module.ImportReference(fieldOffsetAttribute));
                                 var offset = new CustomAttributeNamedArgument("Offset", new CustomAttributeArgument(stringType, $"0x{fieldOffset:X}"));
                                 customAttribute.Fields.Add(offset);
-                                fieldDefinition.CustomAttributes.Add(customAttribute);
+                                if (addFieldOffset)
+                                    fieldDefinition.CustomAttributes.Add(customAttribute);
                             }
                         }
                     }
@@ -294,7 +301,8 @@ namespace Il2CppDumper
                                     var customAttribute = new CustomAttribute(typeDefinition.Module.ImportReference(metadataOffsetAttribute));
                                     var offset = new CustomAttributeNamedArgument("Offset", new CustomAttributeArgument(stringType, $"0x{value:X}"));
                                     customAttribute.Fields.Add(offset);
-                                    parameterDefinition.CustomAttributes.Add(customAttribute);
+                                    if (addMetadataOffset)
+                                        parameterDefinition.CustomAttributes.Add(customAttribute);
                                 }
                             }
                         }
@@ -317,7 +325,8 @@ namespace Il2CppDumper
                                     var slot = new CustomAttributeNamedArgument("Slot", new CustomAttributeArgument(stringType, methodDef.slot.ToString()));
                                     customAttribute.Fields.Add(slot);
                                 }
-                                methodDefinition.CustomAttributes.Add(customAttribute);
+                                if (addAddress)
+                                    methodDefinition.CustomAttributes.Add(customAttribute);
                             }
                         }
                     }
@@ -393,7 +402,7 @@ namespace Il2CppDumper
                         var typeDef = metadata.typeDefs[index];
                         var typeDefinition = typeDefinitionDic[typeDef];
                         //typeAttribute
-                        CreateCustomAttribute(imageDef, typeDef.customAttributeIndex, typeDef.token, typeDefinition.Module, typeDefinition.CustomAttributes);
+                        CreateCustomAttribute(imageDef, typeDef.customAttributeIndex, typeDef.token, typeDefinition.Module, typeDefinition.CustomAttributes, addMethodOffset);
 
                         //field
                         var fieldEnd = typeDef.fieldStart + typeDef.field_count;
@@ -402,7 +411,7 @@ namespace Il2CppDumper
                             var fieldDef = metadata.fieldDefs[i];
                             var fieldDefinition = fieldDefinitionDic[i];
                             //fieldAttribute
-                            CreateCustomAttribute(imageDef, fieldDef.customAttributeIndex, fieldDef.token, typeDefinition.Module, fieldDefinition.CustomAttributes);
+                            CreateCustomAttribute(imageDef, fieldDef.customAttributeIndex, fieldDef.token, typeDefinition.Module, fieldDefinition.CustomAttributes, addMethodOffset);
                         }
 
                         //method
@@ -412,7 +421,7 @@ namespace Il2CppDumper
                             var methodDef = metadata.methodDefs[i];
                             var methodDefinition = methodDefinitionDic[i];
                             //methodAttribute
-                            CreateCustomAttribute(imageDef, methodDef.customAttributeIndex, methodDef.token, typeDefinition.Module, methodDefinition.CustomAttributes);
+                            CreateCustomAttribute(imageDef, methodDef.customAttributeIndex, methodDef.token, typeDefinition.Module, methodDefinition.CustomAttributes, addMethodOffset);
 
                             //method parameter
                             for (var j = 0; j < methodDef.parameterCount; ++j)
@@ -420,7 +429,7 @@ namespace Il2CppDumper
                                 var parameterDef = metadata.parameterDefs[methodDef.parameterStart + j];
                                 var parameterDefinition = parameterDefinitionDic[methodDef.parameterStart + j];
                                 //parameterAttribute
-                                CreateCustomAttribute(imageDef, parameterDef.customAttributeIndex, parameterDef.token, typeDefinition.Module, parameterDefinition.CustomAttributes);
+                                CreateCustomAttribute(imageDef, parameterDef.customAttributeIndex, parameterDef.token, typeDefinition.Module, parameterDefinition.CustomAttributes, addMethodOffset);
                             }
                         }
 
@@ -431,7 +440,7 @@ namespace Il2CppDumper
                             var propertyDef = metadata.propertyDefs[i];
                             var propertyDefinition = propertyDefinitionDic[i];
                             //propertyAttribute
-                            CreateCustomAttribute(imageDef, propertyDef.customAttributeIndex, propertyDef.token, typeDefinition.Module, propertyDefinition.CustomAttributes);
+                            CreateCustomAttribute(imageDef, propertyDef.customAttributeIndex, propertyDef.token, typeDefinition.Module, propertyDefinition.CustomAttributes, addMethodOffset);
                         }
 
                         //event
@@ -441,7 +450,7 @@ namespace Il2CppDumper
                             var eventDef = metadata.eventDefs[i];
                             var eventDefinition = eventDefinitionDic[i];
                             //eventAttribute
-                            CreateCustomAttribute(imageDef, eventDef.customAttributeIndex, eventDef.token, typeDefinition.Module, eventDefinition.CustomAttributes);
+                            CreateCustomAttribute(imageDef, eventDef.customAttributeIndex, eventDef.token, typeDefinition.Module, eventDefinition.CustomAttributes, addMethodOffset);
                         }
                     }
                 }
@@ -559,7 +568,7 @@ namespace Il2CppDumper
             }
         }
 
-        private void CreateCustomAttribute(Il2CppImageDefinition imageDef, int customAttributeIndex, uint token, ModuleDefinition moduleDefinition, Collection<CustomAttribute> customAttributes)
+        private void CreateCustomAttribute(Il2CppImageDefinition imageDef, int customAttributeIndex, uint token, ModuleDefinition moduleDefinition, Collection<CustomAttribute> customAttributes, bool addMethodOffset)
         {
             var attributeIndex = metadata.GetCustomAttributeIndex(imageDef, customAttributeIndex, token);
             if (attributeIndex >= 0)
@@ -586,7 +595,8 @@ namespace Il2CppDumper
                                 customAttribute.Fields.Add(name);
                                 customAttribute.Fields.Add(rva);
                                 customAttribute.Fields.Add(offset);
-                                customAttributes.Add(customAttribute);
+                                if (addMethodOffset)
+                                    customAttributes.Add(customAttribute);
                             }
                         }
                     }
